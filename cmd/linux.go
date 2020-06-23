@@ -102,6 +102,17 @@ func upTime() string {
 	return list[1]
 }
 
+func batteryPerc() int {
+	f, err := os.Open("/sys/class/power_supply/BAT0/capacity")
+	check(err)
+
+	reader := bufio.NewReader(f)
+	l, _, _:= reader.ReadLine()
+
+	p, _ := strconv.Atoi(string(l))
+	return p
+}
+
 
 func dirFromPath(path string) []string {
 	files, err := ioutil.ReadDir(path)
@@ -138,18 +149,80 @@ func pids() []string{
 	return pids
 }
 
-func batteryPerc() int {
-	f, err := os.Open("/sys/class/power_supply/BAT0/capacity")
+func commandPID(pid string) string {
+	procDir := "/proc/"
+	pidDir := procDir + pid
+	cmdFile := pidDir + "/cmdline"
+
+	f, err := os.Open(cmdFile)
 	check(err)
 
 	reader := bufio.NewReader(f)
 	l, _, _:= reader.ReadLine()
 
-	p, _ := strconv.Atoi(string(l))
-	return p
+	return string(l)
 }
 
+func ramPID(pid string) int{
+	procDir := "/proc/"
+	pidDir := procDir + pid
+	ramFile := pidDir + "/status"
 
+	f, err := os.Open(ramFile)
+	check(err)
+
+	reader := bufio.NewReader(f)
+	scanner := bufio.NewScanner(reader)
+
+	scanner.Split(bufio.ScanLines)
+	var ram int
+	for scanner.Scan() {
+
+		l := strings.Split(scanner.Text(), ":")
+		if l[0] == "VmSize" {
+
+			s := strings.TrimSuffix(l[1], " kB")
+			s = strings.TrimSpace(s)
+			ram, _ = strconv.Atoi(s)
+		}
+	}
+	return ram / 1000
+}
+
+func uidPID(pid string) string {
+
+	procDir := "/proc/"
+	pidDir := procDir + pid
+	ramFile := pidDir + "/status"
+
+	f, err := os.Open(ramFile)
+	check(err)
+
+	reader := bufio.NewReader(f)
+	scanner := bufio.NewScanner(reader)
+
+	scanner.Split(bufio.ScanLines)
+	var uid string
+	for scanner.Scan() {
+
+		l := strings.Split(scanner.Text(), ":")
+		if l[0] == "Uid" {
+			s := strings.Split(l[1], "\t")
+			uid = s[1]
+		}
+	}
+	return uid
+}
+
+//TODO: find CLK_TCK
+func clkTck() int64 {
+	return int64(0)
+}
+
+//TODO: uptime for each pid
+func upTimePID(pid string) int64 {
+	return int64(0)
+}
 
 func main() {
 	fmt.Printf("%v\n", kernel())
@@ -157,5 +230,11 @@ func main() {
 	fmt.Printf("%v\n", upTime())
 	fmt.Printf("%v\n", MemInfo())
 	fmt.Printf("%v\n", batteryPerc())
+	pidsList := pids()
+	lastPID := pidsList[len(pidsList) - 1]
+	fmt.Printf("%v\n", lastPID)
+	fmt.Printf("%v\n", commandPID(lastPID))
+	fmt.Printf("%v\n", ramPID(lastPID))
+	fmt.Printf("%v\n", uidPID(lastPID))
 
 }
