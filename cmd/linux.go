@@ -8,6 +8,13 @@ import (
 	"strings"
 	"io/ioutil"
 	"strconv"
+	"encoding/binary"
+)
+
+const (
+	_AT_CLKTCK = 17
+
+	uintSize uint = 32 << (^uint(0) >> 63)
 )
 
 type CPUStates int
@@ -214,8 +221,21 @@ func uidPID(pid string) string {
 	return uid
 }
 
-//TODO: find CLK_TCK
+//find CLK_TCK
+//code from cpu_linux.go in shirou/gopsutil
 func clkTck() int64 {
+	buf, err := ioutil.ReadFile("/proc/self/auxv")
+	check(err)
+
+	pb := int(uintSize / 8)
+	for i := 0; i < len(buf) - pb*2; i+= pb * 2{
+		tag := uint(binary.LittleEndian.Uint64(buf[i:]))
+		val := uint(binary.LittleEndian.Uint64(buf[i+pb:]))
+
+		if tag == _AT_CLKTCK {
+			return int64(val)
+		}
+	}
 	return int64(0)
 }
 
@@ -225,16 +245,16 @@ func upTimePID(pid string) int64 {
 }
 
 func main() {
-	fmt.Printf("%v\n", kernel())
-	fmt.Printf("%v\n", findOs())
-	fmt.Printf("%v\n", upTime())
-	fmt.Printf("%v\n", MemInfo())
-	fmt.Printf("%v\n", batteryPerc())
+	fmt.Printf("Kernel: %v\n", kernel())
+	fmt.Printf("OS: %v\n", findOs())
+	fmt.Printf("up time: %v\n", upTime())
+	fmt.Printf("Mem: %v\n", MemInfo())
+	fmt.Printf("Battery: %v\n", batteryPerc())
 	pidsList := pids()
 	lastPID := pidsList[len(pidsList) - 1]
-	fmt.Printf("%v\n", lastPID)
-	fmt.Printf("%v\n", commandPID(lastPID))
-	fmt.Printf("%v\n", ramPID(lastPID))
-	fmt.Printf("%v\n", uidPID(lastPID))
-
+	fmt.Printf("Last PID: %v\n", lastPID)
+	fmt.Printf("Command: %v\n", commandPID(lastPID))
+	fmt.Printf("Ram: %v\n", ramPID(lastPID))
+	fmt.Printf("User: %v\n", uidPID(lastPID))
+	fmt.Printf("clk tck: %v\n", clkTck())
 }
