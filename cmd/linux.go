@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 	"bufio"
 	"regexp"
 	"strings"
@@ -120,6 +121,38 @@ func batteryPerc() int {
 	return p
 }
 
+func lastUpgrade() {
+	f, err := os.Open("/var/log/pacman.log")
+	check(err)
+
+	reader := bufio.NewReader(f)
+	scanner := bufio.NewScanner(reader)
+
+	scanner.Split(bufio.ScanLines)
+
+	//full date parse
+	match := regexp.MustCompile(`20\d{2}(-|\/)((0[1-9])|(1[0-2]))(-|\/)((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])`)
+
+	last := time.Date(0, time.January, 1, 0, 0, 0,0, time.UTC)
+	for scanner.Scan() {
+		l := scanner.Text()
+		if strings.Contains(l, "pacman -S -y") {
+			reg := match.FindString(l)
+
+			// its should be a better way to get the localtime
+			reg += "-04:00"
+
+			date, _ := time.Parse(time.RFC3339, reg)
+			if last.Before(date) {
+				last = date
+			}
+		}
+	}
+
+	diff := time.Now().Sub(last)
+
+	fmt.Printf("%v %v\n", int(diff.Hours()), int(diff.Minutes()) % 60 )
+}
 
 func dirFromPath(path string) []string {
 	files, err := ioutil.ReadDir(path)
