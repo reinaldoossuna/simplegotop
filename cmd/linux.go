@@ -127,7 +127,7 @@ func batteryPerc() int {
 	return p
 }
 
-func lastUpgrade() {
+func lastUpgrade() string {
 	f, err := os.Open("/var/log/pacman.log")
 	check(err)
 
@@ -157,7 +157,7 @@ func lastUpgrade() {
 
 	diff := time.Now().Sub(last)
 
-	fmt.Printf("%v %v\n", int(diff.Hours()), int(diff.Minutes()) % 60 )
+	return fmt.Sprintf("%v Hours, %v Min", int(diff.Hours()), int(diff.Minutes()) % 60)
 }
 
 func dirFromPath(path string) []string {
