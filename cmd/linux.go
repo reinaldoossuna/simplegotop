@@ -107,7 +107,13 @@ func upTime() string {
 	line , _, _:= reader.ReadLine()
 
 	list := strings.Split(string(line), " ")
-	return list[1]
+	time_seconds, _ := strconv.ParseFloat(list[0], 32)
+	hours := int32(time_seconds)/3600
+	remain := int32(time_seconds) % 3600
+	minutes := remain / 60
+	seconds := remain % 60
+
+	return fmt.Sprintf("%v Hours, %v Min, %v Sec", hours, minutes, seconds)
 }
 
 func batteryPerc() int {
