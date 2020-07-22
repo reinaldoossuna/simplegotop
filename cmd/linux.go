@@ -9,6 +9,7 @@ import (
 	"strings"
 	"io/ioutil"
 	"strconv"
+	"syscall"
 	"encoding/binary"
 )
 
@@ -158,6 +159,16 @@ func lastUpgrade() string {
 	diff := time.Now().Sub(last)
 
 	return fmt.Sprintf("%v Hours, %v Min", int(diff.Hours()), int(diff.Minutes()) % 60)
+}
+
+func freeSpace(path string) uint64 {
+	var stat syscall.Statfs_t
+	syscall.Statfs(path, &stat)
+	return stat.Bavail * uint64(stat.Bsize) / (1024 * 1024 * 1024)
+}
+
+func rootFreeSpace() uint64 {
+	return freeSpace("/")
 }
 
 func dirFromPath(path string) []string {
