@@ -297,9 +297,13 @@ func upTimePID(pid string) int64 {
 func main() {
 	fmt.Printf("Kernel: %v\n", kernel())
 	fmt.Printf("OS: %v\n", findOs())
-	fmt.Printf("up time: %v\n", upTime())
-	fmt.Printf("Mem: %v\n", MemInfo())
-	fmt.Printf("Battery: %v\n", batteryPerc())
+	fmt.Printf("Up time: %v\n\n", upTime())
+
+	fmt.Printf("Mem: %v %%\n", MemInfo())
+	fmt.Printf("Battery: %v %%\n", batteryPerc())
+	fmt.Printf("last upgrade: %v\n\n", lastUpgrade())
+
+	/*
 	pidsList := pids()
 	lastPID := pidsList[len(pidsList) - 1]
 	fmt.Printf("Last PID: %v\n", lastPID)
@@ -307,4 +311,9 @@ func main() {
 	fmt.Printf("Ram: %v\n", ramPID(lastPID))
 	fmt.Printf("User: %v\n", uidPID(lastPID))
 	fmt.Printf("clk tck: %v\n", clkTck())
+	fmt.Printf("up time task: %v\n", upTimePID(lastPID))
+	*/
+
+	fmt.Printf("Root Free Space: %v Gb\n", rootFreeSpace())
+	fmt.Printf("Hdd Free Space: %v Gb\n ", freeSpace("/mnt/hdd"))
 }
